@@ -62,7 +62,7 @@ fn create_commands() -> Command {
 fn list(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
 
     let list = storage.habit_list()?;
-    let compact = matches.contains_id("compact");
+    // let compact = matches.contains_id("compact");
     let local = chrono::Local::now();
 
     let year;

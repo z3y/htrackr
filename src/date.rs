@@ -1,4 +1,4 @@
-use chrono::{Datelike, Local};
+use chrono::Datelike;
 
 use crate::error::CliError;
 
