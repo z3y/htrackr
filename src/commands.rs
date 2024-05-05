@@ -142,9 +142,9 @@ fn list(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
                     }
                 }
 
-                if cap != line.len() {
-                    panic!("capacity")
-                }
+                // if cap != line.len() {
+                //     panic!("capacity")
+                // }
                 
                 println!("{}", line);
             },
