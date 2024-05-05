@@ -1,4 +1,4 @@
-use chrono::Datelike;
+use chrono::{DateTime, Datelike, Duration, Local};
 
 use crate::error::CliError;
 
@@ -82,19 +82,28 @@ impl Date {
     }
 
     pub fn today() -> Date {
-        let local = chrono::Local::now();
-
-        let year = local.year();
-        let month = local.month() as i32;
-        let day = local.day() as i32;
-
-        Date {
-            year,
-            month,
-            day: day,
-        }
+        let local = Local::now();
+        datetime_to_date(local)
     }
 
+    pub fn yesterday() -> Date {
+        let local = Local::now() - Duration::days(1);
+        datetime_to_date(local)
+    }
+
+
+}
+
+fn datetime_to_date(local: DateTime<Local>) -> Date {
+    let year = local.year();
+    let month = local.month() as i32;
+    let day = local.day() as i32;
+
+    Date {
+        year,
+        month,
+        day,
+    }
 }
 
 pub fn num_days(year: i32, month: i32) -> i32  {

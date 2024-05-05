@@ -23,39 +23,49 @@ pub fn cli(storage: &Storage) -> Result<(), CliError> {
 
 fn create_commands() -> Command {
 
+    let short_date_help = "Optional date in YYYY-MM format";
+    let date_help = "Date in YYYY-MM-DD format, or yesterday";
+
+
     Command::new("htrackr")
+    .arg_required_else_help(true)
         .subcommand(Command::new("list")
             .about("List habits for month")
                 .arg(arg!(-c --compact "Compact print")
                 .required(false)
             )
-            .arg(arg!(date: [DATE]).required(false).help("Optional date in YYYY-MM format"))
+            .arg(arg!(date: [DATE]).required(false).help(short_date_help))
         )
         .subcommand(Command::new("create")
-            .about("Create new habits")
+            .about("Create new habit")
             .arg(arg!(name: [NAME]))
+            .arg_required_else_help(true)
         )
         .subcommand(Command::new("delete")
-            .about("Delete habits")
+            .about("Delete habit")
             .arg(arg!(name: [NAME]))
+            .arg_required_else_help(true)
         )
         .subcommand(Command::new("rename")
-            .about("Delete habits")
+            .about("Rename habit")
             .arg(arg!(name: [NAME]))
             .arg(arg!(new_name: [NEW_NAME]))
         )
         .subcommand(Command::new("id")
             .arg(arg!(name: [NAME]))
+            .about("Get ID")
         )
         .subcommand(Command::new("mark")
-            .about("Mark habits as complete for date")
+            .about("Mark habit as complete for date")
             .arg(arg!(name: [NAME]))
-            .arg(arg!(date: [DATE]).required(false))
+            .arg_required_else_help(true)
+            .arg(arg!(date: [DATE]).required(false).help(date_help))
         )
         .subcommand(Command::new("unmark")
-            .about("Unmark habits as complete for date")
+            .about("Unmark habit as complete for date")
             .arg(arg!(name: [NAME]))
-            .arg(arg!(date: [DATE]).required(false))
+            .arg_required_else_help(true)
+            .arg(arg!(date: [DATE]).required(false).help(date_help))
         )
 }
 
@@ -191,12 +201,19 @@ fn id(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
     return Err(CliError::new("invalid args"));
 }
 
+fn parse_date_arg(date: &String) -> Result<Date, CliError> {
+    if date == "yesterday" {
+        return Ok(Date::yesterday());
+    }
+    
+    Date::from_string(date)
+}
+
 fn mark(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
 
     if let Some(name) = matches.get_one::<String>("name") {
         if let Some(date) = matches.get_one::<String>("date") {
-            let date = Date::from_string(date)?;
-            storage.mark_habit(&name, &date)?;
+            storage.mark_habit(&name, &parse_date_arg(&date)?)?;
             return Ok(());
         } else {
             let today = Date::today();
@@ -212,8 +229,7 @@ fn unmark(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
 
     if let Some(name) = matches.get_one::<String>("name") {
         if let Some(date) = matches.get_one::<String>("date") {
-            let date = Date::from_string(date)?;
-            storage.unmark_habit(&name, &date)?;
+            storage.unmark_habit(&name, &parse_date_arg(&date)?)?;
             return Ok(());
         } else {
             let today = Date::today();
