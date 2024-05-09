@@ -1,3 +1,5 @@
+use std::io::stdin;
+
 use chrono::Datelike;
 use clap::{arg, ArgMatches, Command};
 
@@ -24,7 +26,7 @@ pub fn cli(storage: &Storage) -> Result<(), CliError> {
 fn create_commands() -> Command {
 
     let short_date_help = "Optional date in YYYY-MM format";
-    let date_help = "Date in YYYY-MM-DD format, or yesterday";
+    let date_help = "Date in YYYY-MM-DD format, or yesterday (y)";
 
 
     Command::new("htrackr")
@@ -168,9 +170,18 @@ fn create(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
 
 fn delete(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
 
+    
     if let Some(name) = matches.get_one::<String>("name") {
-        storage.delete_habit(name)?;
-
+        println!("Delete habit {} and all entires? y/n", name);
+        let mut line = String::with_capacity(1);
+        match stdin().read_line(&mut line) {
+            Ok(_) => {
+                if line.len() > 1 && line.as_bytes()[0] == b'y' {
+                    storage.delete_habit(name)?;
+                }
+            },
+            Err(err) => return Err(CliError(err.to_string())),
+        }
         return  Ok(());
     }
 
