@@ -201,8 +201,8 @@ fn id(matches: &ArgMatches, storage: &Storage) -> Result<(), CliError> {
     return Err(CliError::new("invalid args"));
 }
 
-fn parse_date_arg(date: &String) -> Result<Date, CliError> {
-    if date == "yesterday" {
+fn parse_date_arg(date: &str) -> Result<Date, CliError> {
+    if date == "yesterday" || date == "y" {
         return Ok(Date::yesterday());
     }
     

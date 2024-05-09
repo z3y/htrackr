@@ -61,8 +61,12 @@ impl Storage {
         if !self.habit_exists(name)? {
             return Err(CliError(format!("habit {} not found", name)));
         }
+        
+        // delete all foreign keys first
+        let id = self.get_habit_id(name)?;
+        self.conn.execute("delete from habit_entries where habit_id = ?1", params![id])?;
 
-        let _ = self.conn.execute("delete from habits where name = ?1", params![name])?;
+        self.conn.execute("delete from habits where name = ?1", params![name])?;
 
         Ok(())
     }
