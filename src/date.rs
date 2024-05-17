@@ -2,7 +2,7 @@ use chrono::{DateTime, Datelike, Duration, Local};
 
 use crate::error::CliError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Date {
     pub year: i32,
     pub month: i32,

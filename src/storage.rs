@@ -187,6 +187,13 @@ impl Storage {
 
 }
 
+fn connect_test() -> Result<Storage, CliError> {
+    let mut path = "./db_test/".to_string();
+    path.push_str(&Uuid::new_v4().to_string());
+    path.push_str(".db");
+    connect(&path)
+}
+
 pub fn connect(path: &str) -> Result<Storage, CliError> {
     let conn = Connection::open(path);
 
@@ -197,4 +204,88 @@ pub fn connect(path: &str) -> Result<Storage, CliError> {
     storage.initialize()?;
 
     Ok(storage)
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::builder::Str;
+
+    use super::*;
+    #[test]
+    fn test_create_habit() {
+        let storage = connect_test().unwrap();
+
+        storage.create_habit("read").unwrap();
+        let exists = storage.habit_exists("read").unwrap();
+        assert!(exists);
+    }
+
+    #[test]
+    fn test_delete_habit() {
+        let storage = connect_test().unwrap();
+
+        storage.create_habit("read").unwrap();
+        storage.delete_habit("read").unwrap();
+        let exists = storage.habit_exists("read").unwrap();
+        assert!(!exists);
+    }
+
+    #[test]
+    fn test_rename_habit() {
+        let storage = connect_test().unwrap();
+
+        storage.create_habit("abcde").unwrap();
+        storage.rename_habit("abcde", "asdfgh").unwrap();
+
+        let exists = storage.habit_exists("asdfgh").unwrap();
+        assert!(exists);
+        let exists = storage.habit_exists("abcde").unwrap();
+        assert!(!exists);
+    }
+
+    #[test]
+    fn test_list_habit() {
+        let storage = connect_test().unwrap();
+
+        storage.create_habit("abcde").unwrap();
+        storage.create_habit("asdfgh").unwrap();
+
+        let list = storage.habit_list().unwrap();
+        assert!(list.contains(&String::from("abcde")));
+        assert!(list.contains(&String::from("asdfgh")));
+    }
+
+    #[test]
+    fn test_mark_habit() {
+        let storage = connect_test().unwrap();
+
+        storage.create_habit("abcde").unwrap();
+        let date1 = Date { year: 2006, month: 6, day: 7 };
+        let date2 = Date { year: 2006, month: 6, day: 9 };
+        storage.mark_habit("abcde", &date1).unwrap();
+        storage.mark_habit("abcde", &date2).unwrap();
+        let days = storage.get_marked_days("abcde", &Date { year: 2006, month: 6, day: 1 }, &Date { year: 2006, month: 6, day: 20 }).unwrap();
+
+        assert!(days.len() == 2);
+        assert!(days.contains(&date1));
+        assert!(days.contains(&date2));
+        assert!(!days.contains(&Date { year: 2006, month: 6, day: 10 }));
+    }
+
+    #[test]
+    fn test_mark_unhabit() {
+        let storage = connect_test().unwrap();
+
+        storage.create_habit("abcde").unwrap();
+        let date1 = Date { year: 2006, month: 6, day: 7 };
+        let date2 = Date { year: 2006, month: 6, day: 9 };
+        storage.mark_habit("abcde", &date1).unwrap();
+        storage.mark_habit("abcde", &date2).unwrap();
+        storage.unmark_habit("abcde", &date2).unwrap();
+        let days = storage.get_marked_days("abcde", &Date { year: 2006, month: 6, day: 1 }, &Date { year: 2006, month: 6, day: 20 }).unwrap();
+
+        assert!(days.len() == 1);
+        assert!(days.contains(&date1));
+        assert!(!days.contains(&date2));
+    }
 }
